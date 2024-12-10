@@ -14,8 +14,8 @@ This project implements a Retrieval-Augmented Generation (RAG) system for questi
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-repo-url.git
-   cd your-repo-name
+   git clone https://github.com/Zhdddd7/ragQAbot
+   cd ragqabot
    ```
 2. pip install -r requirements.txt
 ```
