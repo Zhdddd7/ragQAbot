@@ -5,7 +5,7 @@ from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTempla
 from langchain.schema import HumanMessage, AIMessage
 from langchain.chains import RetrievalQA
 import torch
-# 加载 Hugging Face 模型和分词器
+# Load Embedding and Tokenizer
 model_name = "meta-llama/Llama-3.2-3B"
 print("Loading model...")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -14,7 +14,7 @@ model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float
 print(f"Is CUDA available: {torch.cuda.is_available()}")
 print(model.hf_device_map)
 # breakpoint()
-# 创建生成管道并包装为 HuggingFacePipeline
+# Create HuggingFacePipeline
 
 
 pipeline_llm = pipeline(
@@ -25,39 +25,39 @@ pipeline_llm = pipeline(
     temperature=1.0,
     top_k=50,
     top_p=0.9,
-    repetition_penalty=1.2,  # 惩罚重复
+    repetition_penalty=1.2,  
 )
 
 
 langchain_llm = HuggingFacePipeline(pipeline=pipeline_llm)
 
-# 使用 Hugging Face Embeddings 进行向量化
+# Vectorization
 print("Loading embedding model...")
 embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
 
-# 加载 FAISS 向量库，用于知识召回
+# Load Vector database for vector recall
 print("Loading FAISS vector database...")
 vector_db = FAISS.load_local('LLM.faiss', embedding_model, allow_dangerous_deserialization=True)
 retriever = vector_db.as_retriever(search_kwargs={"k": 5})
 
-# 使用 RetrievalQA 组合 RAG 流程
+# Build retriveval for RAG paradigm
 retrieval_qa = RetrievalQA.from_chain_type(
     llm=langchain_llm,
     chain_type="stuff",
     retriever=retriever
 )
 
-# 开始对话
+# Chat
 chat_history = []
 while True:
     query = input("query: ")
-    # 检索增强生成
+    # RAG
     print("Processing query...")
     result = retrieval_qa.invoke({"query": query})
     response_content = result["result"]
     print('-------------------------------------')
     print(response_content)
-    # 更新对话历史
+    # Update chat history
     chat_history.append(HumanMessage(content=query))
     chat_history.append(AIMessage(content=response_content))
     chat_history = chat_history[-20:]  # 保留最近 10 轮对话m
